@@ -105,6 +105,18 @@ func MultipartForm(formStruct interface{}, ifacePtr ...interface{}) martini.Hand
 			req.MultipartForm = form
 		}
 
+
+		// merge request body data and URL query string to req.MultipartForm.Value
+		if req.Form == nil {
+			err := req.ParseForm()
+			if err != nil {
+				errors.Overall[DeserializationError] = err.Error()
+			}
+		}
+		for k, v := range req.Form {
+			req.MultipartForm.Value[k] = append(req.MultipartForm.Value[k], v...)
+		}
+
 		mapForm(formStruct, req.MultipartForm.Value, req.MultipartForm.File, errors)
 
 		validateAndMap(formStruct, context, errors, ifacePtr...)
