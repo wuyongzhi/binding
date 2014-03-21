@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/codegangsta/martini"
+	"net/url"
 )
 
 /*
@@ -113,11 +114,22 @@ func MultipartForm(formStruct interface{}, ifacePtr ...interface{}) martini.Hand
 				errors.Overall[DeserializationError] = err.Error()
 			}
 		}
-		for k, v := range req.Form {
-			req.MultipartForm.Value[k] = append(req.MultipartForm.Value[k], v...)
+		var values url.Values
+
+		if len(req.Form) > 0 {
+			values = make(url.Values)
+			for k, v := range req.Form {
+				values[k] = append(values[k], v...)
+			}
+			for k, v := range req.MultipartForm.Value {
+				values[k] = append(values[k], v...)
+			}
+
+		} else {
+			values = req.MultipartForm.Value
 		}
 
-		mapForm(formStruct, req.MultipartForm.Value, req.MultipartForm.File, errors)
+		mapForm(formStruct, values, req.MultipartForm.File, errors)
 
 		validateAndMap(formStruct, context, errors, ifacePtr...)
 	}
